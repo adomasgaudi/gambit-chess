@@ -1,0 +1,121 @@
+:root {
+  /* Board */
+  --square-light: #f0d9b5;
+  --square-dark: #b58863;
+  --lastmove: rgb(155 199 0 / 41%);
+  --selected: rgb(20 85 30 / 50%);
+  --hint: rgb(90 160 220 / 35%);
+  --dest-dot: rgb(20 85 30 / 35%);
+  --arrow: #15781b;
+
+  /* Shell */
+  --bg: #161512;
+  --bg-2: #1f1e1b;
+  --panel: #262421;
+  --panel-2: #2f2d2a;
+  --line: #3d3a34;
+  --text: #d8d6d2;
+  --text-dim: #97948e;
+  --accent: #629924;
+  --accent-hover: #74ac2f;
+  --danger: #cc4a3c;
+  --white-eval: #f4f4f4;
+  --black-eval: #403d39;
+
+  color-scheme: dark;
+  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+button:hover:not(:disabled) {
+  background: #3a3733;
+  border-color: #4a463f;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button.ghost {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+}
+
+button.link {
+  background: none;
+  border: none;
+  color: var(--accent-hover);
+  padding: 2px 4px;
+  font-size: 13px;
+}
+
+button.link:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+code {
+  background: #12110f;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.92em;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #423f3a;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

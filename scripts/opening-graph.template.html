@@ -1,0 +1,597 @@
+<title>Chess Openings by Compression Distance</title>
+
+<style>
+  :root {
+    --ground: #eef0f3;
+    --panel: #f008;
+    --surface: #ffffff;
+    --ink: #171c22;
+    --ink-soft: #4d5866;
+    --ink-faint: #8a94a1;
+    --rule: #d3d8de;
+    --grid: #e2e6ea;
+    --accent: #8a4b2a;
+    --c0: #b8482f;
+    --c1: #2b7387;
+    --c2: #6f5fae;
+    --c3: #a5781f;
+    --c4: #3d7a4a;
+    --c5: #a8497a;
+    --c6: #4a6fa8;
+    --shadow: 0 1px 2px rgba(23, 28, 34, .06), 0 8px 24px -12px rgba(23, 28, 34, .18);
+    --display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #12161b;
+      --surface: #1a1f26;
+      --ink: #e6eaef;
+      --ink-soft: #a3aeba;
+      --ink-faint: #6d7885;
+      --rule: #2b323b;
+      --grid: #232a32;
+      --accent: #d99b6c;
+      --c0: #e4735a;
+      --c1: #52a8bd;
+      --c2: #9a8ce0;
+      --c3: #d3a63f;
+      --c4: #5fa872;
+      --c5: #d9709f;
+      --c6: #7799d6;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --ground: #eef0f3;
+    --surface: #ffffff;
+    --ink: #171c22;
+    --ink-soft: #4d5866;
+    --ink-faint: #8a94a1;
+    --rule: #d3d8de;
+    --grid: #e2e6ea;
+    --accent: #8a4b2a;
+    --c0: #b8482f;
+    --c1: #2b7387;
+    --c2: #6f5fae;
+    --c3: #a5781f;
+    --c4: #3d7a4a;
+    --c5: #a8497a;
+    --c6: #4a6fa8;
+    --shadow: 0 1px 2px rgba(23, 28, 34, .06), 0 8px 24px -12px rgba(23, 28, 34, .18);
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #12161b;
+    --surface: #1a1f26;
+    --ink: #e6eaef;
+    --ink-soft: #a3aeba;
+    --ink-faint: #6d7885;
+    --rule: #2b323b;
+    --grid: #232a32;
+    --accent: #d99b6c;
+    --c0: #e4735a;
+    --c1: #52a8bd;
+    --c2: #9a8ce0;
+    --c3: #d3a63f;
+    --c4: #5fa872;
+    --c5: #d9709f;
+    --c6: #7799d6;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 32px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.1;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 17px;
+  }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -.01em;
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .note {
+    max-width: 68ch;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .graphbox {
+    position: relative;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .edge {
+    stroke: var(--ink-faint);
+    fill: none;
+  }
+
+  .node-dot {
+    stroke: var(--surface);
+    stroke-width: 1.5;
+    cursor: pointer;
+  }
+
+  .node-label {
+    font-family: var(--body);
+    font-size: 8.4px;
+    fill: var(--ink);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 2.6px;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex: none;
+  }
+
+  .tip {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .12s;
+    background: var(--ink);
+    color: var(--ground);
+    padding: 8px 11px;
+    max-width: 320px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    box-shadow: var(--shadow);
+    z-index: 5;
+  }
+
+  .tip b {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .tip code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    opacity: .82;
+  }
+
+  .matrixbox {
+    padding: 18px;
+    overflow-x: auto;
+  }
+
+  table.pairs {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  table.pairs th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  table.pairs td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--grid);
+    vertical-align: middle;
+  }
+
+  table.pairs tr:last-child td {
+    border-bottom: none;
+  }
+
+  .num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .bar {
+    width: 100%;
+    min-width: 90px;
+    height: 7px;
+    background: var(--grid);
+  }
+
+  .bar i {
+    display: block;
+    height: 100%;
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 24px;
+  }
+
+  .cap {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .finding {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 14px;
+    max-width: 74ch;
+  }
+
+  .finding .k {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    padding-top: 3px;
+    white-space: nowrap;
+  }
+
+  .finding .v {
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+
+  .finding .v strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    color: var(--ink-faint);
+    font-size: 13px;
+    max-width: 74ch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Normalized compression distance &middot; 33 openings</div>
+    <h1>What gzip thinks the chess openings are</h1>
+    <p class="lede">
+      No engine, no evaluation, no chess knowledge whatsoever. Each opening is just its
+      main line written in algebraic notation. If two lines compress better together than
+      apart, they share structure &mdash; and that alone is enough to rediscover the
+      opening families.
+    </p>
+    <div class="formula">NCD(x, y) = ( C(xy) &minus; min(C(x), C(y)) ) / max(C(x), C(y))&nbsp;&nbsp;&nbsp;C = gzip -9, bytes</div>
+  </header>
+
+  <section>
+    <h2>The similarity graph</h2>
+    <p class="note">
+      Every pair of openings is scored, then each opening keeps its 2 nearest neighbours.
+      Colours are <em>not</em> assigned &mdash; they come from label propagation over those
+      edges, so each colour is a family the compressor found on its own. Shorter, darker
+      edges mean lower distance. Hover a node for its line.
+    </p>
+    <div class="card graphbox">
+      <svg id="graph" viewBox="0 0 900 620" role="img" aria-label="Force-directed graph of 33 chess openings clustered by compression distance"></svg>
+      <div class="tip" id="tip"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Every pair, all 528 of them</h2>
+    <p class="note">
+      The full distance matrix, rows and columns ordered by discovered cluster. Dark
+      squares are close pairs. The dark blocks on the diagonal are the families; the pale
+      field around them is how much of chess opening theory is genuinely unlike everything else.
+    </p>
+    <div class="card matrixbox">
+      <svg id="matrix" viewBox="0 0 900 900" role="img" aria-label="Distance matrix heatmap of 33 openings by 33 openings"></svg>
+    </div>
+  </section>
+
+  <section class="cols">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="cap">Most alike</div>
+      <div class="card"><table class="pairs" id="closest"></table></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="cap">Most unlike</div>
+      <div class="card"><table class="pairs" id="farthest"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What it got right, and what it got wrong</h2>
+    <div class="finding" id="findings"></div>
+  </section>
+
+  <footer>
+    Method borrowed verbatim from the idea-similarity graph in the <em>see research</em>
+    project: gzip NCD, k-nearest-neighbour edges, label propagation, weight <code>1 &minus; NCD</code>.
+    Only the corpus changed &mdash; ideas out, move lines in. Lines are 6 moves of the main
+    variation, uniform length so no opening gets a compression advantage from being longer.
+  </footer>
+</div>
+
+<script>
+  const DATA = /*__DATA__*/ null;
+  const PAL = ["--c0", "--c1", "--c2", "--c3", "--c4", "--c5", "--c6"];
+  const cvar = (n) => "var(" + PAL[n % PAL.length] + ")";
+
+  const nodes = DATA.nodes;
+  const edges = DATA.edges;
+  const all = DATA.edgesAll;
+  const name = (i) => nodes[i].name;
+
+  // stable colour index per cluster, in order of first appearance
+  const order = [];
+  for (const n of nodes) if (!order.includes(n.cluster)) order.push(n.cluster);
+  const cidx = (c) => order.indexOf(c);
+
+  /* ---------- force layout ---------- */
+  const W = 900, H = 620;
+  const P = nodes.map((n, i) => {
+    const a = (i / nodes.length) * Math.PI * 2;
+    return { x: W / 2 + Math.cos(a) * 230, y: H / 2 + Math.sin(a) * 190, vx: 0, vy: 0 };
+  });
+  const adj = edges.map((e) => ({ a: e.a, b: e.b, len: 40 + e.ncd * 190 }));
+
+  for (let step = 0; step < 900; step++) {
+    const cool = 1 - step / 900;
+    for (let i = 0; i < P.length; i++) {
+      for (let j = i + 1; j < P.length; j++) {
+        let dx = P[j].x - P[i].x, dy = P[j].y - P[i].y;
+        let d2 = dx * dx + dy * dy || 0.01;
+        const d = Math.sqrt(d2);
+        const f = 9000 / d2;
+        const ux = dx / d, uy = dy / d;
+        P[i].vx -= ux * f; P[i].vy -= uy * f;
+        P[j].vx += ux * f; P[j].vy += uy * f;
+      }
+    }
+    for (const e of adj) {
+      const A = P[e.a], B = P[e.b];
+      let dx = B.x - A.x, dy = B.y - A.y;
+      const d = Math.hypot(dx, dy) || 0.01;
+      const f = (d - e.len) * 0.06;
+      const ux = dx / d, uy = dy / d;
+      A.vx += ux * f; A.vy += uy * f;
+      B.vx -= ux * f; B.vy -= uy * f;
+    }
+    for (const p of P) {
+      p.vx += (W / 2 - p.x) * 0.0022;
+      p.vy += (H / 2 - p.y) * 0.0022;
+      p.x += p.vx * 0.55 * cool;
+      p.y += p.vy * 0.55 * cool;
+      p.vx *= 0.82; p.vy *= 0.82;
+    }
+  }
+
+  // fit to viewport with room for labels
+  const pad = 58;
+  const xs = P.map((p) => p.x), ys = P.map((p) => p.y);
+  const sx = (W - pad * 2) / (Math.max(...xs) - Math.min(...xs));
+  const sy = (H - pad * 2) / (Math.max(...ys) - Math.min(...ys));
+  const s = Math.min(sx, sy), x0 = Math.min(...xs), y0 = Math.min(...ys);
+  const cx = (W - (Math.max(...xs) - x0) * s) / 2;
+  const cy = (H - (Math.max(...ys) - y0) * s) / 2;
+  for (const p of P) { p.x = cx + (p.x - x0) * s; p.y = cy + (p.y - y0) * s; }
+
+  const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  let g = "";
+  for (const e of edges) {
+    const op = (0.62 - e.ncd * 0.9).toFixed(3);
+    const w = (2.6 - e.ncd * 3.4).toFixed(2);
+    g += '<line class="edge" x1="' + P[e.a].x.toFixed(1) + '" y1="' + P[e.a].y.toFixed(1) +
+      '" x2="' + P[e.b].x.toFixed(1) + '" y2="' + P[e.b].y.toFixed(1) +
+      '" stroke-opacity="' + Math.max(0.12, op) + '" stroke-width="' + Math.max(0.5, w) + '"/>';
+  }
+  nodes.forEach((n, i) => {
+    g += '<circle class="node-dot" data-i="' + i + '" cx="' + P[i].x.toFixed(1) + '" cy="' +
+      P[i].y.toFixed(1) + '" r="6" fill="' + cvar(cidx(n.cluster)) + '"/>';
+  });
+  nodes.forEach((n, i) => {
+    const right = P[i].x < W / 2;
+    g += '<text class="node-label" x="' + (P[i].x + (right ? 10 : -10)).toFixed(1) + '" y="' +
+      (P[i].y + 3).toFixed(1) + '" text-anchor="' + (right ? "start" : "end") + '">' +
+      esc(n.name) + "</text>";
+  });
+  document.getElementById("graph").innerHTML = g;
+
+  /* ---------- tooltip ---------- */
+  const tip = document.getElementById("tip");
+  const box = document.querySelector(".graphbox");
+  document.getElementById("graph").addEventListener("mouseover", (ev) => {
+    const t = ev.target.closest(".node-dot");
+    if (!t) return;
+    const n = nodes[+t.dataset.i];
+    const near = all.filter((e) => e.a === n.idx || e.b === n.idx)
+      .sort((x, y) => x.ncd - y.ncd).slice(0, 3)
+      .map((e) => name(e.a === n.idx ? e.b : e.a) + " " + e.ncd.toFixed(3)).join(" &middot; ");
+    tip.innerHTML = "<b>" + esc(n.name) + "</b><code>" + esc(n.line) + "</code><br><span style='opacity:.7'>nearest: " + near + "</span>";
+    const r = box.getBoundingClientRect();
+    const br = t.getBoundingClientRect();
+    tip.style.opacity = 1;
+    tip.style.left = Math.min(r.width - 330, br.left - r.left + 14) + "px";
+    tip.style.top = (br.top - r.top + 14) + "px";
+  });
+  box.addEventListener("mouseleave", () => { tip.style.opacity = 0; });
+
+  /* ---------- legend ---------- */
+  const clusterOf = {};
+  for (const n of nodes) (clusterOf[n.cluster] ||= []).push(n.name);
+  document.getElementById("legend").innerHTML = order.map((c) =>
+    '<span><i class="swatch" style="background:' + cvar(cidx(c)) + '"></i>' +
+    clusterOf[c].length + " openings &mdash; " + esc(clusterOf[c][0]) + " group</span>").join("");
+
+  /* ---------- matrix ---------- */
+  const seq = [...nodes].sort((a, b) => cidx(a.cluster) - cidx(b.cluster) || a.idx - b.idx);
+  const pos = {}; seq.forEach((n, i) => (pos[n.idx] = i));
+  const D = {};
+  for (const e of all) { D[e.a + "-" + e.b] = e.ncd; D[e.b + "-" + e.a] = e.ncd; }
+  const lo = Math.min(...all.map((e) => e.ncd)), hi = Math.max(...all.map((e) => e.ncd));
+  const M = 900, LAB = 168, cell = (M - LAB) / seq.length;
+  let m = "";
+  seq.forEach((r, i) => {
+    seq.forEach((c, j) => {
+      const v = i === j ? 0 : D[r.idx + "-" + c.idx];
+      const t = 1 - (v - lo) / (hi - lo);
+      const fill = i === j ? cvar(cidx(r.cluster)) : "currentColor";
+      m += '<rect x="' + (LAB + j * cell).toFixed(2) + '" y="' + (LAB + i * cell).toFixed(2) +
+        '" width="' + (cell + 0.4).toFixed(2) + '" height="' + (cell + 0.4).toFixed(2) +
+        '" fill="' + fill + '" fill-opacity="' + (i === j ? 1 : (0.04 + t * t * 0.92).toFixed(3)) +
+        '"><title>' + esc(r.name) + " / " + esc(c.name) + (i === j ? "" : " = " + v.toFixed(3)) + "</title></rect>";
+    });
+  });
+  seq.forEach((r, i) => {
+    const y = (LAB + i * cell + cell / 2 + 3).toFixed(1);
+    m += '<text x="' + (LAB - 8) + '" y="' + y + '" text-anchor="end" font-size="10.5" fill="' +
+      cvar(cidx(r.cluster)) + '">' + esc(r.name) + "</text>";
+    m += '<text transform="translate(' + (LAB + i * cell + cell / 2 + 3.5).toFixed(1) + ',' + (LAB - 8) +
+      ') rotate(-90)" font-size="10.5" fill="' + cvar(cidx(r.cluster)) + '">' + esc(r.name) + "</text>";
+  });
+  const mx = document.getElementById("matrix");
+  mx.setAttribute("style", "color:var(--ink)");
+  mx.innerHTML = m;
+
+  /* ---------- pair tables ---------- */
+  const sorted = [...all].sort((a, b) => a.ncd - b.ncd);
+  function tbl(el, rows, invert) {
+    const span = hi - lo;
+    el.innerHTML = "<tr><th>Pair</th><th style='width:110px'>NCD</th><th style='width:38%'></th></tr>" +
+      rows.map((e) => {
+        const frac = invert ? (e.ncd - lo) / span : 1 - (e.ncd - lo) / span;
+        return "<tr><td>" + esc(name(e.a)) + " <span style='color:var(--ink-faint)'>&mdash;</span> " +
+          esc(name(e.b)) + '</td><td class="num">' + e.ncd.toFixed(3) +
+          '</td><td><span class="bar"><i style="width:' + (frac * 100).toFixed(1) +
+          '%;background:' + (invert ? "var(--ink-faint)" : "var(--accent)") + '"></i></span></td></tr>';
+      }).join("");
+  }
+  tbl(document.getElementById("closest"), sorted.slice(0, 10), false);
+  tbl(document.getElementById("farthest"), sorted.slice(-10).reverse(), true);
+
+  /* ---------- findings ---------- */
+  const F = [
+    ["Sicilians", "The tightest block on the whole board. <strong>Najdorf and Dragon sit at 0.167</strong> &mdash; they are identical for nine plies and only part on move 5. The compressor is reading a genuine transpositional family, not a name."],
+    ["1.d4 vs 1.e4", "The matrix splits almost cleanly down the middle without ever being told the first move exists. <strong>The largest distances are all cross-family</strong>: King's Gambit against the Nimzo-Indian is as far apart as this corpus gets."],
+    ["Indians", "Nimzo, Queen's Indian, King's Indian and the Catalan land together on the shared <code>1.d4 Nf6 2.c4</code> stem. The Gr&uuml;nfeld does not &mdash; its early <code>cxd5 Nxd5</code> capture sequence pulls it toward the English."],
+    ["Where it fails", "It has no idea what a move <em>means</em>. <strong>The Pirc and the Modern group with the Indians</strong> because both are full of <code>Nf6 g6 Bg7 O-O</code>, and it is right about the pawn structure but blind to the fact that one is a 1.e4 defence. Notation overlap is not strategy."],
+  ];
+  document.getElementById("findings").innerHTML = F.map(
+    (f) => '<div class="k">' + f[0] + '</div><div class="v">' + f[1] + "</div>").join("");
+</script>

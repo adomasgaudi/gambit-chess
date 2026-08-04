@@ -1,0 +1,11 @@
+/* Panel styles that belong with the components rather than the app shell.
+   The bulk of the sidebar layout lives in App.css; this file holds only what
+   Panels.tsx owns outright. */
+
+.clock-row {
+  flex: 1;
+}
+
+.captured {
+  flex: none;
+}

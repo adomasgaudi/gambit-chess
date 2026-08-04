@@ -1,0 +1,103 @@
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setup h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field > label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+}
+
+.field .value {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.sub-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.segmented button {
+  font-size: 13px;
+  padding: 8px 4px;
+}
+
+.segmented button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.tc-grid button {
+  font-size: 13px;
+  padding: 8px 4px;
+}
+
+.tc-grid button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.warn {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #e0a05c;
+}
+
+.setup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.setup-actions button {
+  flex: 1;
+  padding: 10px;
+}

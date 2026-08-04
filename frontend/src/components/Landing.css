@@ -1,0 +1,197 @@
+.landing {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  /* A faint board pattern behind the page, far enough back to read as texture
+     rather than as a board. */
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(98 153 36 / 9%) 0%, transparent 62%),
+    var(--bg);
+}
+
+.landing-inner {
+  width: 100%;
+  max-width: 1020px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+/* ------------------------------------------------------------------ head */
+
+.landing-head {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.landing-head h1 {
+  margin: 0;
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.landing-head .brand-mark {
+  color: var(--accent-hover);
+}
+
+.landing-head p {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.landing-head em {
+  font-style: normal;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.resume {
+  margin-top: 6px;
+  font-size: 13px;
+  padding: 6px 14px;
+}
+
+/* ----------------------------------------------------------------- cards */
+
+.landing-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  text-align: left;
+  padding: 22px 20px 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms, background 140ms;
+}
+
+.mode-card:hover {
+  background: var(--panel-2);
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+
+.card-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--square-light);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+}
+
+.piece-art img {
+  height: 82%;
+  width: auto;
+}
+
+/* The two-player card overlaps its pair so they read as one mark. */
+.piece-art img + img {
+  margin-left: -14px;
+}
+
+.board-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.card-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+.card-dot.on {
+  background: #8fc44a;
+  box-shadow: 0 0 6px #8fc44a88;
+}
+
+.card-dot.off {
+  background: var(--danger);
+}
+
+.card-tagline {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--accent-hover);
+}
+
+.card-blurb {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: normal;
+}
+
+.card-warn {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #e0a05c;
+  white-space: normal;
+}
+
+/* ------------------------------------------------------------------ foot */
+
+.landing-foot {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.landing-version {
+  font-size: 11.5px;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .landing-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .landing-head h1 {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 520px) {
+  .landing-cards {
+    grid-template-columns: 1fr;
+  }
+}

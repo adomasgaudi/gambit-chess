@@ -1,0 +1,8 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+
+# Downloaded, not authored — see scripts/fetch_engines.ps1
+engines/
+frontend/public/engine/

@@ -1,0 +1,204 @@
+.board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  user-select: none;
+  touch-action: none;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 18px rgb(0 0 0 / 45%);
+  cursor: pointer;
+}
+
+/* The 64 squares as one repeating gradient — no DOM nodes, no seams. Each
+   tile is a 2×2 block of squares; the conic gradient's four quadrants are the
+   four squares of that block, starting light in the top-left so a8 is light. */
+.board-squares {
+  position: absolute;
+  inset: 0;
+  background-image: conic-gradient(
+    var(--square-dark) 0 25%,
+    var(--square-light) 0 50%,
+    var(--square-dark) 0 75%,
+    var(--square-light) 0
+  );
+  background-size: 25% 25%;
+}
+
+.piece,
+.sq-lastmove,
+.sq-check,
+.sq-selected,
+.sq-hover,
+.sq-highlight,
+.dest {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12.5%;
+  height: 12.5%;
+  will-change: transform;
+}
+
+.piece {
+  z-index: 10;
+  transition: transform 120ms cubic-bezier(0.2, 0.7, 0.4, 1);
+  pointer-events: none;
+}
+
+.piece img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 25%));
+}
+
+.piece.dragging {
+  cursor: grabbing;
+  filter: drop-shadow(0 6px 8px rgb(0 0 0 / 45%));
+  transform-origin: center;
+}
+
+.sq-lastmove {
+  background: var(--lastmove);
+  z-index: 2;
+}
+
+.sq-selected {
+  background: var(--selected);
+  z-index: 3;
+}
+
+.sq-highlight {
+  background: var(--hint);
+  z-index: 2;
+}
+
+.sq-hover {
+  box-shadow: inset 0 0 0 0.35vmin rgb(255 255 255 / 65%);
+  z-index: 4;
+}
+
+.sq-check {
+  z-index: 3;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(255 0 0 / 100%) 0%,
+    rgb(231 0 0 / 100%) 25%,
+    rgb(169 0 0 / 0%) 89%,
+    rgb(158 0 0 / 0%) 100%
+  );
+}
+
+/* Move dots: a small disc on empty squares, a ring on capturable ones. */
+.dest {
+  z-index: 5;
+  pointer-events: none;
+}
+
+.dest::after {
+  content: '';
+  position: absolute;
+  inset: 37%;
+  border-radius: 50%;
+  background: var(--dest-dot);
+}
+
+.dest-capture::after {
+  inset: 0;
+  border-radius: 50%;
+  background: none;
+  border: 0.6vmin solid var(--dest-dot);
+}
+
+/* Defender counts. Bottom-left of each square, clear of the coordinate
+   labels on the right and of the piece's own silhouette. */
+.defbadge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12.5%;
+  height: 12.5%;
+  z-index: 12;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0 0 4% 4%;
+}
+
+.defbadge span {
+  min-width: 40%;
+  height: 40%;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(8px, 1.5vmin, 15px);
+  font-weight: 700;
+  color: #fff;
+  border: 1px solid rgb(0 0 0 / 35%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 45%);
+}
+
+.defbadge.safe span {
+  background: #4b7a2b;
+}
+
+.defbadge.contested span {
+  background: #b4832a;
+}
+
+.defbadge.weak span {
+  background: #b23c30;
+}
+
+.board-arrows {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.coords {
+  position: absolute;
+  display: flex;
+  font-size: clamp(8px, 1.05vmin, 13px);
+  font-weight: 700;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.coords span.light {
+  color: var(--square-light);
+}
+
+.coords span.dark {
+  color: var(--square-dark);
+}
+
+.coords-files {
+  bottom: 1px;
+  left: 0;
+  right: 0;
+  justify-content: space-between;
+}
+
+.coords-files span {
+  width: 12.5%;
+  text-align: right;
+  padding-right: 3px;
+}
+
+.coords-ranks {
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.coords-ranks span {
+  height: 12.5%;
+  line-height: 1;
+}
