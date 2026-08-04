@@ -59,6 +59,23 @@ players at one board. Clocks with increment (bullet through classical, or
 untimed), drag-and-drop and click-to-move, legal-move dots, check and last-move
 highlights, promotion picker, takeback, resign, flip, sound, PGN and FEN export.
 
+**Engine settings** (the ⚙ beside *Engine eval*) — number of lines (1–5), search
+depth (12 to unlimited), and threads. The stats row under it shows the depth,
+node count and nodes/second the number on screen actually came from.
+
+**Rank one piece's moves.** Click a piece with the engine on and the lines
+become that piece's options, best first, instead of the position's — Stockfish's
+`searchmoves`, one line per candidate. The panel says which piece it's ranking.
+Deselect to go back to the whole position. Focused searches skip the cloud,
+which can only answer about the position as a whole.
+
+**Defenders overlay.** A badge on every occupied square counting the friendly
+pieces that defend it, green when nothing attacks it, amber when something does,
+red when the attackers outnumber the defenders. It counts bodies, not value: two
+pawns defending a queen reads "2", which is the number you want when working out
+whether a capture leaves you a piece down, and says nothing about the trade
+being good.
+
 **Analysis** — live eval bar and the top three engine lines, hover a line to see
 its first move as an arrow, opening names from a built-in ECO book, and
 **Review game**, which walks the whole game and annotates each move
@@ -72,7 +89,22 @@ Every move that cost something also gets a second mark saying *what kind* of
 mistake it was — `⚔` tactical, `≈` positional — with the reasoning in the
 tooltip. See below.
 
+Each engine line is labelled with the opening it transposes into, when that
+differs from the one the game is already in — from the start position the lines
+name themselves as the English, the Ruy López, the Réti and so on.
+
 Keyboard: `←` `→` step, `↑` `↓` jump to start/end, `f` flips the board.
+
+**Why Maia is made to think.** Maia's move comes out of a single policy
+evaluation in about a millisecond, so left alone it answers instantly and its
+clock never moves — the one inhuman thing left about an engine built to be
+human. `src/chess/thinkTime.ts` models the delay instead: a share of the
+*remaining* clock per move, so the spend decays geometrically and it can never
+flag; quartered while the opening is still book; scaled by how many legal moves
+there are; log-normal jitter, which is roughly how human move times really
+distribute; and collapsing towards pre-moving under a minute. One constant
+covers every time control — 60s gives ~1.3s a move, 300s ~6.7s. Set it to
+Instant in the options panel to get the old behaviour back.
 
 ## Notes on the engines
 
