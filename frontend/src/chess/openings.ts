@@ -168,3 +168,25 @@ export function findOpening(sanMoves: string[]): Opening | null {
   }
   return null
 }
+
+/** How many nested openings a one-band move row may show at most. */
+export const OPENINGS_PER_MOVE_MIN = 0
+export const OPENINGS_PER_MOVE_MAX = 6
+
+/**
+ * Every opening name whose line is a prefix of `sanMoves`, from the most
+ * general (shortest line) to the most specific. Names that repeat on longer
+ * lines — e.g. "Ruy López: Morphy Defence" covering both the 5- and 6-ply
+ * transpositions — are collapsed, keeping the first sighting.
+ */
+export function findOpenings(sanMoves: string[]): Opening[] {
+  const limit = Math.min(sanMoves.length, 16)
+  const found: Opening[] = []
+  for (let n = 1; n <= limit; n++) {
+    const hit = INDEX.get(sanMoves.slice(0, n).join(' '))
+    if (hit && (found.length === 0 || found[found.length - 1].name !== hit.name)) {
+      found.push(hit)
+    }
+  }
+  return found
+}

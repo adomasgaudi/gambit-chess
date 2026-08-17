@@ -1,13 +1,11 @@
-/** The pieces of chrome around the board: clocks, move list, eval bar, lines. */
+/** The pieces of chrome around the board: clocks, move list, and eval bar. */
 
 import { useEffect, useRef } from 'react'
 import type { Square } from 'chess.js'
 import type { PieceRole, Ply } from '../chess/game'
-import type { EngineLine, Score } from '../engines/types'
-import { formatScore, scoreToWhiteShare } from '../engines/types'
-import type { MoveQuality } from '../chess/quality'
-import { QUALITY_META } from '../chess/quality'
-import { NATURE_META, describeInsight, type Insight } from '../chess/nature'
+import { findOpening } from '../chess/openings'
+import type { Score } from '../engines/types'
+import { formatPercent, formatScore, scoreToWhiteShare } from '../engines/types'
 import './Panels.css'
 
 // ---------------------------------------------------------------- promotion
@@ -99,18 +97,28 @@ export function formatClock(ms: number): string {
 export function MoveList({
   plies,
   cursor,
-  quality,
-  insights,
   onSelect,
   result,
+  maiaPercent,
+  maiaScore,
+  maiaLoading,
+  sfScore,
+  sfLoading,
 }: {
   plies: Ply[]
   cursor: number
-  quality: Map<number, MoveQuality>
-  /** What kind of mistake each losing move was; empty until a review runs. */
-  insights?: Map<number, Insight>
   onSelect: (cursor: number) => void
   result?: string
+  /** Probability (0-1) that Maia 2500 would play the move at this ply, or null if unknown. */
+  maiaPercent?: (index: number) => number | null
+  /** Maia 2500's root score (white POV) at this ply's position, or null. */
+  maiaScore?: (index: number) => Score | null
+  /** Whether the per-move Maia figures are still being fetched. */
+  maiaLoading?: boolean
+  /** Stockfish's evaluation (white POV) of this ply's position, or null. */
+  sfScore?: (index: number) => Score | null
+  /** Whether the per-move Stockfish figures are still being fetched. */
+  sfLoading?: boolean
 }) {
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -133,17 +141,52 @@ export function MoveList({
     }
   }
 
+  // The opening name of the position reached at the end of each row; repeated
+  // names are shown once, at the first row that reaches them.
+  const rowOpenings = rows.map((row) => {
+    const end = row.whiteIndex + (row.black ? 2 : 1)
+    return findOpening(plies.slice(0, end).map((ply) => ply.san))
+  })
+
   return (
     <div className="movelist" ref={listRef}>
       {plies.length === 0 && <div className="movelist-empty">No moves yet</div>}
       {rows.map((row, rowIndex) => {
         const whitePly = row.white ? row.whiteIndex + 1 : -1
         const blackPly = row.black ? row.whiteIndex + (row.white ? 2 : 1) : -1
+        const opening = rowOpenings[rowIndex]
+        const openingChanged = opening && rowIndex > 0 && rowOpenings[rowIndex - 1]?.name !== opening.name
+        const showOpening = opening && (rowIndex === 0 || openingChanged)
         return (
           <div className="movelist-row" key={`${row.number}-${rowIndex}`}>
             <span className="movenum">{row.number}.</span>
-            <SanCell ply={row.white} index={whitePly} cursor={cursor} quality={quality} insights={insights} onSelect={onSelect} />
-            <SanCell ply={row.black} index={blackPly} cursor={cursor} quality={quality} insights={insights} onSelect={onSelect} />
+            <SanCell
+              ply={row.white}
+              index={whitePly}
+              cursor={cursor}
+              onSelect={onSelect}
+              maiaPercent={maiaPercent ? maiaPercent(whitePly) : null}
+              maiaScore={maiaScore ? maiaScore(whitePly) : null}
+              maiaLoading={maiaLoading ?? false}
+              sfScore={sfScore ? sfScore(whitePly) : null}
+              sfLoading={sfLoading ?? false}
+            />
+            <SanCell
+              ply={row.black}
+              index={blackPly}
+              cursor={cursor}
+              onSelect={onSelect}
+              maiaPercent={maiaPercent ? maiaPercent(blackPly) : null}
+              maiaScore={maiaScore ? maiaScore(blackPly) : null}
+              maiaLoading={maiaLoading ?? false}
+              sfScore={sfScore ? sfScore(blackPly) : null}
+              sfLoading={sfLoading ?? false}
+            />
+            {showOpening && (
+              <span className="movelist-opening" title={opening.eco}>
+                {opening.name}
+              </span>
+            )}
           </div>
         )
       })}
@@ -156,40 +199,52 @@ function SanCell({
   ply,
   index,
   cursor,
-  quality,
-  insights,
   onSelect,
+  maiaPercent,
+  maiaScore,
+  maiaLoading,
+  sfScore,
+  sfLoading,
 }: {
   ply?: Ply
   index: number
   cursor: number
-  quality: Map<number, MoveQuality>
-  insights?: Map<number, Insight>
   onSelect: (cursor: number) => void
+  maiaPercent: number | null
+  maiaScore: Score | null
+  maiaLoading: boolean
+  sfScore: Score | null
+  sfLoading: boolean
 }) {
   if (!ply) return <span className="san empty" />
-  const mark = quality.get(index - 1)
-  const meta = mark ? QUALITY_META[mark] : null
-  const insight = insights?.get(index - 1)
-  const nature = insight ? NATURE_META[insight.nature] : null
+
+  const badges = [
+    maiaPercent !== null && (
+      <span
+        key="maia"
+        className="san-maia"
+        title="Maia 2500 policy probability and score for this move"
+      >
+        {formatPercent(maiaPercent)}
+        {maiaScore !== null ? ` ${formatScore(maiaScore)}` : ''}
+      </span>
+    ),
+    maiaPercent === null && (maiaLoading || sfLoading) && <span key="maia-loading" className="san-maia">…</span>,
+    sfScore !== null && (
+      <span key="sf" className="san-sf" title="Stockfish evaluation of this position (white POV)">
+        SF {formatScore(sfScore)}
+      </span>
+    ),
+    sfScore === null && sfLoading && <span key="sf-loading" className="san-sf">…</span>,
+  ].filter(Boolean)
 
   return (
     <span
       className={`san${cursor === index ? ' current' : ''}`}
       onClick={() => onSelect(index)}
-      title={insight && meta ? `${meta.label} — ${describeInsight(insight)}` : meta?.label}
     >
-      {ply.san}
-      {meta && (
-        <span className="san-mark" style={{ color: meta.color }}>
-          {meta.glyph}
-        </span>
-      )}
-      {nature && (
-        <span className="san-nature" style={{ color: nature.color }}>
-          {nature.glyph}
-        </span>
-      )}
+      <span className="san-move">{ply.san}</span>
+      {badges.length > 0 && <span className="san-badges">{badges}</span>}
     </span>
   )
 }
@@ -212,48 +267,6 @@ export function EvalBar({ score, orientation }: { score: Score | null; orientati
 }
 
 // -------------------------------------------------------------- engine info
-
-export function EngineLines({
-  lines,
-  turn,
-  onHover,
-  sanForLine,
-  openingForLine,
-}: {
-  lines: EngineLine[]
-  turn: 'w' | 'b'
-  onHover: (line: EngineLine | null) => void
-  sanForLine: (pv: string[]) => string[]
-  /** Name of the opening this line transposes into, if the book knows one. */
-  openingForLine?: (pv: string[]) => { eco: string; name: string } | null
-}) {
-  if (lines.length === 0) return <div className="lines-empty">Engine idle</div>
-  return (
-    <div className="engine-lines" onMouseLeave={() => onHover(null)}>
-      {lines.map((line) => {
-        const whitePov = {
-          cp: line.cp === undefined ? undefined : line.cp * (turn === 'w' ? 1 : -1),
-          mate: line.mate === undefined ? undefined : line.mate * (turn === 'w' ? 1 : -1),
-        }
-        const positive = scoreToWhiteShare(whitePov) >= 0.5
-        const opening = openingForLine?.(line.pv)
-        return (
-          <div className="engine-line" key={line.multipv} onMouseEnter={() => onHover(line)}>
-            <span className={`line-score ${positive ? 'pos' : 'neg'}`}>{formatScore(whitePov)}</span>
-            <span className="line-body">
-              <span className="line-pv">{sanForLine(line.pv).slice(0, 12).join(' ')}</span>
-              {opening && (
-                <span className="line-opening" title={`${opening.eco} · ${opening.name}`}>
-                  {opening.name}
-                </span>
-              )}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 // ------------------------------------------------------------ captured bar
 

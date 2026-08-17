@@ -7,7 +7,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $LC0_VERSION = 'v0.32.1'
-$RATINGS = 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900
+$RATINGS = 1100, 1500, 1900
 
 New-Item -ItemType Directory -Force "$root\engines\maia" | Out-Null
 
@@ -30,17 +30,6 @@ foreach ($rating in $RATINGS) {
     Write-Host "Downloading maia-$rating..."
     Invoke-WebRequest "https://github.com/CSSLab/maia-chess/raw/master/maia_weights/maia-$rating.pb.gz" `
         -OutFile $out -UseBasicParsing
-}
-
-# Stockfish ships through npm; copy its WASM into the frontend's public dir so
-# the browser can load it as a plain worker script.
-$bin = "$root\frontend\node_modules\stockfish\bin"
-if (Test-Path $bin) {
-    New-Item -ItemType Directory -Force "$root\frontend\public\engine" | Out-Null
-    Copy-Item "$bin\stockfish-18-lite*" "$root\frontend\public\engine\" -Force
-    Write-Host "Copied Stockfish WASM into frontend\public\engine."
-} else {
-    Write-Warning "Run 'npm install' in frontend\ first, then re-run this script to copy Stockfish."
 }
 
 Write-Host "Done."

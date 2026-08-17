@@ -1,7 +1,7 @@
 {
   "name": "gambit",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.48.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/three": "^0.185.3",
     "chess.js": "^1.4.0",
+    "lila-stockfish-web": "^0.0.11",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "stockfish": "^18.0.8"
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

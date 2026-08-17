@@ -12,10 +12,23 @@ from __future__ import annotations
 
 import subprocess
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
+import re
 
-RATINGS = [1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900]
+# The UI presents five human-facing bands. Maia v1 ships official nets from
+# 1100 to 1900, so the outer bands stay Maia policy evaluations while using a
+# softer/harder policy temperature around the nearest available net.
+RATINGS = [600, 1000, 1500, 2000, 2500]
+
+PROFILES: dict[int, tuple[int, float]] = {
+    600: (1100, 1.85),
+    1000: (1100, 1.48),
+    1500: (1500, 1.359),
+    2000: (1900, 1.08),
+    2500: (1900, 0.82),
+}
 
 ROOT = Path(__file__).resolve().parent.parent
 LC0_EXE = ROOT / "engines" / "lc0" / "lc0.exe"
@@ -25,6 +38,8 @@ WEIGHTS_DIR = ROOT / "engines" / "maia"
 # read loop below is bounded by a sentinel line rather than by line count.
 STARTUP_TIMEOUT = 60.0
 MOVE_TIMEOUT = 30.0
+POLICY_RE = re.compile(r"^info string (?P<move>\S+).*?\(P:\s*(?P<prob>[0-9.]+)%\)")
+VALUE_RE = re.compile(r"\(V:\s*(?P<value>[+-]?[0-9.]+)\)")
 
 
 class EngineError(RuntimeError):
@@ -38,13 +53,15 @@ def weights_path(rating: int) -> Path:
 @dataclass
 class MaiaProcess:
     rating: int
+    model_rating: int
+    policy_temperature: float
     proc: subprocess.Popen = field(init=False)
     lock: threading.Lock = field(default_factory=threading.Lock, init=False)
 
     def __post_init__(self) -> None:
         if not LC0_EXE.exists():
             raise EngineError(f"lc0 not found at {LC0_EXE}")
-        weights = weights_path(self.rating)
+        weights = weights_path(self.model_rating)
         if not weights.exists():
             raise EngineError(f"Maia weights not found at {weights}")
 
@@ -55,8 +72,7 @@ class MaiaProcess:
                 "--backend=blas",
                 "--minibatch-size=1",
                 "--threads=1",
-                # Silence per-move stats so stdout stays cheap to parse.
-                "--verbose-move-stats=false",
+                "--verbose-move-stats=true",
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -68,7 +84,8 @@ class MaiaProcess:
         )
         self._send("uci")
         self._read_until("uciok", STARTUP_TIMEOUT)
-        self._send("setoption name VerboseMoveStats value false")
+        self._send("setoption name VerboseMoveStats value true")
+        self._send(f"setoption name PolicyTemperature value {self.policy_temperature}")
         self._send("isready")
         self._read_until("readyok", STARTUP_TIMEOUT)
 
@@ -104,7 +121,24 @@ class MaiaProcess:
 
     # -- api -------------------------------------------------------------
 
+    # How many policy moves a caller may ask for. lc0 lists every legal move,
+    # so the ceiling is only there to keep a stray request from filling the panel.
+    MAX_CANDIDATES = 20
+
     def bestmove(self, fen: str, moves: list[str], nodes: int = 1) -> dict:
+        result = self.evaluate(fen, moves, nodes)
+        return {
+            "bestmove": result["bestmove"],
+            "ponder": "",
+            "rating": self.rating,
+            "modelRating": self.model_rating,
+            "value": result["value"],
+            # The full policy, so the caller can ask "what would Maia think of
+            # the move that was actually played here?" without a second query.
+            "policy": result["all"],
+        }
+
+    def evaluate(self, fen: str, moves: list[str], nodes: int = 1, top: int = 5) -> dict:
         with self.lock:
             position = f"position fen {fen}"
             if moves:
@@ -114,17 +148,47 @@ class MaiaProcess:
             lines = self._read_until("bestmove", MOVE_TIMEOUT)
 
         best = ""
-        ponder = ""
         for line in reversed(lines):
             if line.startswith("bestmove"):
                 parts = line.split()
                 best = parts[1] if len(parts) > 1 else ""
-                if len(parts) > 3 and parts[2] == "ponder":
-                    ponder = parts[3]
                 break
         if not best or best == "(none)":
             raise EngineError(f"lc0 returned no move for {fen}")
-        return {"bestmove": best, "ponder": ponder, "rating": self.rating}
+
+        policy: dict[str, float] = {}
+        value = 0.0
+        for line in lines:
+            # lc0's root summary line is shaped exactly like a move line but
+            # names "node" instead of a move; it carries the position value.
+            if line.startswith("info string node"):
+                value_match = VALUE_RE.search(line)
+                if value_match:
+                    value = float(value_match.group("value"))
+                continue
+            policy_match = POLICY_RE.match(line)
+            if policy_match:
+                policy[policy_match.group("move")] = float(policy_match.group("prob")) / 100.0
+
+        wanted = max(1, min(self.MAX_CANDIDATES, top))
+        ordered = sorted(policy.items(), key=lambda item: item[1], reverse=True)
+        candidates = [
+            {"move": move, "probability": probability}
+            for move, probability in ordered[:wanted]
+        ]
+        return {
+            "rating": self.rating,
+            "modelRating": self.model_rating,
+            "bestmove": best,
+            "probability": policy.get(best, 0.0),
+            "value": value,
+            "candidates": candidates,
+            # Every legal move, most likely first. The panel uses it for the
+            # move count, the worst move, and per-piece move lists; the
+            # network only has ~60 moves in the worst case, so the payload is
+            # tiny.
+            "all": [{"move": move, "probability": probability} for move, probability in ordered],
+        }
 
     def close(self) -> None:
         try:
@@ -148,12 +212,13 @@ class MaiaPool:
             engine = self._engines.get(rating)
             if engine is not None and engine.proc.poll() is None:
                 return engine
-            engine = MaiaProcess(rating)
+            model_rating, policy_temperature = PROFILES[rating]
+            engine = MaiaProcess(rating, model_rating, policy_temperature)
             self._engines[rating] = engine
             return engine
 
     def available_ratings(self) -> list[int]:
-        return [r for r in RATINGS if weights_path(r).exists()]
+        return [r for r in RATINGS if weights_path(PROFILES[r][0]).exists()]
 
     def loaded_ratings(self) -> list[int]:
         return sorted(r for r, e in self._engines.items() if e.proc.poll() is None)
@@ -163,3 +228,12 @@ class MaiaPool:
             for engine in self._engines.values():
                 engine.close()
             self._engines.clear()
+
+    def evaluate_all(self, fen: str, moves: list[str], top: int = 5) -> list[dict]:
+        """Run all five Maia policy profiles for the same position."""
+        with ThreadPoolExecutor(max_workers=len(RATINGS)) as executor:
+            futures = {
+                rating: executor.submit(self.get(rating).evaluate, fen, moves, 1, top)
+                for rating in RATINGS
+            }
+            return [futures[rating].result() for rating in RATINGS]

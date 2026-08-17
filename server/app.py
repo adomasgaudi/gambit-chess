@@ -1,8 +1,7 @@
 """HTTP front door for the Maia engine.
 
-Stockfish runs in the browser as WASM, so the only thing that needs a server is
-Maia: its networks run on lc0, which is a native binary. Everything here is
-stateless apart from the pool of warm lc0 processes.
+Maia runs through lc0, which is a native binary. Everything here is stateless
+apart from the pool of warm lc0 processes.
 """
 
 from __future__ import annotations
@@ -28,7 +27,7 @@ app = FastAPI(title="Maia engine", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -41,6 +40,13 @@ class MoveRequest(BaseModel):
     # Maia imitates humans through its policy head alone; more than one node
     # starts turning it back into a (much stronger) Leela.
     nodes: int = 1
+
+
+class EvaluationRequest(BaseModel):
+    fen: str
+    moves: list[str] = Field(default_factory=list)
+    # How many policy moves each band should return.
+    top: int = Field(default=5, ge=1, le=20)
 
 
 @app.get("/api/health")
@@ -63,6 +69,14 @@ def maia_move(req: MoveRequest) -> dict:
     try:
         engine = pool.get(req.rating)
         return engine.bestmove(req.fen, req.moves, req.nodes)
+    except EngineError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/maia/evaluate")
+def maia_evaluate(req: EvaluationRequest) -> dict:
+    try:
+        return {"evaluations": pool.evaluate_all(req.fen, req.moves, req.top)}
     except EngineError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

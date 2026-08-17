@@ -13,12 +13,37 @@ import './Board.css'
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const
 const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8'] as const
+const PIECE_CIRCLE_RADIUS = 0.43
+const KING_PROTECTION_RADIUS = PIECE_CIRCLE_RADIUS + 0.45
+const ROUTE_CLEARANCE = 0.62
 
 export interface Arrow {
   from: Square
   to: Square
   /** CSS colour; defaults to the engine-hint green. */
   color?: string
+}
+
+/**
+ * 'classic' is the flat artwork and 'coin' is a side-coloured disk. Every
+ * '3d' family style is drawn by Board3D instead — a real scene, not a style
+ * of this board — each with its own piece material recipe.
+ */
+export type PieceStyle = 'classic' | 'coin' | '3d' | '3d-marble'
+
+type DefenceKind = 'defence' | 'attack'
+
+interface DefenceArrow extends Arrow {
+  kind: DefenceKind
+  side: 'w' | 'b'
+}
+
+interface RoutedDefencePath {
+  path: string
+  end: Point
+  color: string
+  kind: DefenceKind
+  side: 'w' | 'b'
 }
 
 export interface BoardProps {
@@ -35,8 +60,10 @@ export interface BoardProps {
   highlights?: Square[]
   /** Fires whenever the selected square changes, including on deselect. */
   onSelectChange?: (square: Square | null) => void
-  /** When given, every occupied square gets a defender-count badge. */
+  /** When given, every defender is connected to its defended piece with an arrow. */
   defence?: Defence[] | null
+  /** Flat art or side-coloured disks. */
+  pieceStyle?: PieceStyle
 }
 
 interface PieceOnBoard {
@@ -69,6 +96,107 @@ function squareAt(x: number, y: number, rect: DOMRect, orientation: 'w' | 'b'): 
   const file = orientation === 'w' ? col : 7 - col
   const rank = orientation === 'w' ? 7 - row : row
   return (FILES[file] + RANKS[rank]) as Square
+}
+
+interface Point {
+  x: number
+  y: number
+}
+
+interface OccupiedCenter {
+  square: Square
+  center: Point
+}
+
+function squareCenter(square: Square, orientation: 'w' | 'b'): Point {
+  const pos = squarePos(square, orientation)
+  return { x: pos.x + 0.5, y: pos.y + 0.5 }
+}
+
+function quadraticPoint(start: Point, control: Point, end: Point, t: number): Point {
+  const inverse = 1 - t
+  return {
+    x: inverse * inverse * start.x + 2 * inverse * t * control.x + t * t * end.x,
+    y: inverse * inverse * start.y + 2 * inverse * t * control.y + t * t * end.y,
+  }
+}
+
+function distanceBetween(a: Point, b: Point): number {
+  return Math.hypot(a.x - b.x, a.y - b.y)
+}
+
+function distanceToSegment(point: Point, start: Point, end: Point): number {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const lengthSquared = dx * dx + dy * dy
+  if (!lengthSquared) return distanceBetween(point, start)
+  const t = Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared))
+  return distanceBetween(point, { x: start.x + t * dx, y: start.y + t * dy })
+}
+
+function directPathBlocked(start: Point, end: Point, obstacles: OccupiedCenter[]): boolean {
+  return obstacles.some(({ center }) => distanceToSegment(center, start, end) < ROUTE_CLEARANCE)
+}
+
+function routeScore(start: Point, control: Point, end: Point, obstacles: OccupiedCenter[]): number {
+  let score = 0
+  for (let i = 1; i < 40; i++) {
+    const point = quadraticPoint(start, control, end, i / 40)
+    for (const obstacle of obstacles) {
+      const distance = distanceBetween(point, obstacle.center)
+      if (distance < ROUTE_CLEARANCE) score += 12 + (ROUTE_CLEARANCE - distance) * 12
+      else if (distance < 0.95) score += 0.95 - distance
+    }
+  }
+  return score
+}
+
+function defencePath(
+  arrow: Arrow,
+  orientation: 'w' | 'b',
+  obstacles: OccupiedCenter[],
+): { path: string; end: Point } {
+  const sourceCenter = squareCenter(arrow.from, orientation)
+  const targetCenter = squareCenter(arrow.to, orientation)
+  const dx = targetCenter.x - sourceCenter.x
+  const dy = targetCenter.y - sourceCenter.y
+  const distance = Math.hypot(dx, dy)
+  if (!distance) return { path: '', end: targetCenter }
+
+  const unit = { x: dx / distance, y: dy / distance }
+  const perpendicular = { x: -unit.y, y: unit.x }
+  const circleRadius = PIECE_CIRCLE_RADIUS
+  const start = {
+    x: sourceCenter.x + unit.x * circleRadius,
+    y: sourceCenter.y + unit.y * circleRadius,
+  }
+  const end = {
+    x: targetCenter.x - unit.x * circleRadius,
+    y: targetCenter.y - unit.y * circleRadius,
+  }
+  const midpoint = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 }
+  const bend = Math.min(1.3, Math.max(0.62, distance * 0.24))
+  const clamp = (value: number) => Math.max(0.12, Math.min(7.88, value))
+  const candidates = [
+    { x: clamp(midpoint.x + perpendicular.x * bend), y: clamp(midpoint.y + perpendicular.y * bend) },
+    { x: clamp(midpoint.x - perpendicular.x * bend), y: clamp(midpoint.y - perpendicular.y * bend) },
+  ]
+  const routeObstacles = obstacles.filter(({ square }) => square !== arrow.from && square !== arrow.to)
+  if (!directPathBlocked(start, end, routeObstacles)) {
+    return {
+      path: `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} L ${end.x.toFixed(2)} ${end.y.toFixed(2)}`,
+      end,
+    }
+  }
+
+  const control = candidates.reduce((best, candidate) =>
+    routeScore(start, candidate, end, routeObstacles) < routeScore(start, best, end, routeObstacles) ? candidate : best,
+  )
+
+  return {
+    path: `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} Q ${control.x.toFixed(2)} ${control.y.toFixed(2)} ${end.x.toFixed(2)} ${end.y.toFixed(2)}`,
+    end,
+  }
 }
 
 /**
@@ -148,22 +276,58 @@ export function Board({
   onMove,
   onSelectChange,
   defence,
+  pieceStyle = 'classic',
 }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null)
   const [selected, setSelected] = useState<Square | null>(null)
   const [dragging, setDragging] = useState<{ square: Square; x: number; y: number } | null>(null)
   const [hover, setHover] = useState<Square | null>(null)
+  const fen = chess.fen()
   const pieces = usePieceIdentities(chess)
+  const defenceArrows = useMemo<DefenceArrow[]>(() => {
+    if (!defence) return []
+    return defence.flatMap((entry) => {
+      const target = chess.get(entry.square)
+      if (!target) return []
+      const enemy = target.color === 'w' ? 'b' : 'w'
+      const lineColor = target.color === 'w' ? 'var(--arrow-white)' : 'var(--arrow-black)'
+      const arrowsFrom = (color: 'w' | 'b', kind: DefenceKind) =>
+        chess.attackers(entry.square, color).flatMap((from) => {
+          const source = chess.get(from)
+          if (!source || source.type === 'k') return []
+          return [{ from, to: entry.square, color: lineColor, kind, side: target.color }]
+        })
+      return [
+        ...(target.type === 'k'
+          ? []
+          : arrowsFrom(target.color, 'defence')),
+        ...arrowsFrom(enemy, 'attack'),
+      ]
+    })
+  }, [chess, defence])
+  const kingProtectionCircles = defence
+    ? pieces.filter((piece) => piece.role === 'k').map((piece) => ({ id: piece.id, center: squareCenter(piece.square, orientation) }))
+    : []
+  const defencePaths = useMemo(() => {
+    if (defenceArrows.length === 0) return []
+    const obstacles = chess.board().flatMap((row) =>
+      row.flatMap((piece) => (piece ? [{ square: piece.square, center: squareCenter(piece.square, orientation) }] : [])),
+    )
+    return defenceArrows.map((arrow): RoutedDefencePath => ({
+      ...defencePath(arrow, orientation, obstacles),
+      color: arrow.color ?? 'var(--arrow-defence)',
+      kind: arrow.kind,
+      side: arrow.side,
+    }))
+  }, [chess, defenceArrows, orientation])
 
   // A move from outside (engine, navigation) invalidates any selection.
-  const fen = chess.fen()
   useEffect(() => {
     setSelected(null)
     setDragging(null)
   }, [fen])
 
   // Publish the selection so the page can act on it — the engine restricts its
-  // search to the selected piece's moves.
   useEffect(() => {
     onSelectChange?.(selected)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,11 +342,14 @@ export function Board({
     if (dests.get(from)?.includes(to)) onMove(from, to)
   }
 
+  const squareFrom = (x: number, y: number): Square | null => {
+    const rect = boardRef.current?.getBoundingClientRect()
+    return rect ? squareAt(x, y, rect, orientation) : null
+  }
+
   const handlePointerDown = (event: React.PointerEvent) => {
     if (event.button !== 0) return
-    const rect = boardRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const square = squareAt(event.clientX, event.clientY, rect, orientation)
+    const square = squareFrom(event.clientX, event.clientY)
     if (!square) return
 
     if (selected && square !== selected && dests.get(selected)?.includes(square)) {
@@ -204,16 +371,13 @@ export function Board({
 
   const handlePointerMove = (event: React.PointerEvent) => {
     if (!dragging) return
-    const rect = boardRef.current?.getBoundingClientRect()
-    if (!rect) return
     setDragging({ ...dragging, x: event.clientX, y: event.clientY })
-    setHover(squareAt(event.clientX, event.clientY, rect, orientation))
+    setHover(squareFrom(event.clientX, event.clientY))
   }
 
   const handlePointerUp = (event: React.PointerEvent) => {
     if (!dragging) return
-    const rect = boardRef.current?.getBoundingClientRect()
-    const target = rect ? squareAt(event.clientX, event.clientY, rect, orientation) : null
+    const target = squareFrom(event.clientX, event.clientY)
     const origin = dragging.square
     setDragging(null)
     setHover(null)
@@ -232,7 +396,7 @@ export function Board({
 
   return (
     <div
-      className="board"
+      className={`board pieces-${pieceStyle}`}
       ref={boardRef}
       data-orientation={orientation}
       onPointerDown={handlePointerDown}
@@ -277,35 +441,81 @@ export function Board({
               transition: 'none',
               zIndex: 20,
             }
-          : { transform: `translate(${pos.tx}%, ${pos.ty}%)` }
+          : {
+              transform: `translate(${pos.tx}%, ${pos.ty}%)`,
+              // A standing piece overlaps the rank behind it, so nearer ranks
+              // have to paint later. Flat styles never overlap, but the order
+              // is harmless there.
+              zIndex: isDragged ? 20 : 10 + pos.y,
+            }
+        const code = `${piece.color}${piece.role.toUpperCase()}`
+        const image = <img src={`/piece/${code}.svg`} alt="" draggable={false} />
         return (
           <div
             key={piece.id}
-            className={`piece ${piece.color}${piece.role}${isDragged ? ' dragging' : ''}`}
+            className={`piece ${piece.color}${piece.role} side-${piece.color}${isDragged ? ' dragging' : ''}`}
             style={style}
           >
-            <img src={`/piece/${piece.color}${piece.role.toUpperCase()}.svg`} alt="" draggable={false} />
+            {pieceStyle === 'coin' ? <div className="piece-coin">{image}</div> : image}
           </div>
         )
       })}
 
-      {defence?.map((entry) => {
-        const pos = squarePos(entry.square, orientation)
-        // Outnumbered is the state worth seeing at a glance; "contested" means
-        // it holds for now but a trade is available.
-        const state =
-          entry.attackers > entry.defenders ? 'weak' : entry.attackers > 0 ? 'contested' : 'safe'
-        return (
-          <div
-            key={`def-${entry.square}`}
-            className={`defbadge ${state}`}
-            style={{ transform: `translate(${pos.tx}%, ${pos.ty}%)` }}
-            title={`${entry.square}: defended ${entry.defenders}×, attacked ${entry.attackers}×`}
-          >
-            <span>{entry.defenders}</span>
-          </div>
-        )
-      })}
+      {(defencePaths.length > 0 || kingProtectionCircles.length > 0) && (
+        <svg className="defence-arrows" viewBox="0 0 8 8">
+          {kingProtectionCircles.map(({ id, center }) => (
+            <circle
+              key={`king-protection-${id}`}
+              className="king-protection"
+              cx={center.x}
+              cy={center.y}
+              r={KING_PROTECTION_RADIUS}
+            />
+          ))}
+          <defs>
+            {defencePaths.map(({ color, kind }, i) => (
+              kind === 'attack' ? (
+              <marker
+                key={i}
+                id={`defence-arrowhead-${i}`}
+                orient="auto"
+                markerWidth="3"
+                markerHeight="3.6"
+                refX="2.6"
+                refY="1.8"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 V3.6 L2.6,1.8 Z" fill={color} />
+              </marker>
+              ) : null
+            ))}
+          </defs>
+          {defencePaths.map(({ path, color, kind }, i) => (
+            <path
+              key={i}
+              className={`defence-arrow ${defencePaths[i].side === 'w' ? 'white' : 'black'}`}
+              d={path}
+              stroke={color}
+              markerEnd={kind === 'attack' ? `url(#defence-arrowhead-${i})` : undefined}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+          {defencePaths.map(({ end, color, kind, side }, i) =>
+            kind === 'defence' ? (
+              <circle
+                key={`defence-dot-${i}`}
+                className={`defence-dot ${side === 'w' ? 'white' : 'black'}`}
+                cx={end.x}
+                cy={end.y}
+                r="0.1"
+                fill="none"
+                stroke={color}
+              />
+            ) : null,
+          )}
+        </svg>
+      )}
 
       {arrows.length > 0 && (
         <svg className="board-arrows" viewBox="0 0 8 8">

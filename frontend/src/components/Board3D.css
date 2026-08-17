@@ -1,0 +1,87 @@
+.board3d {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, var(--bg-2) 0%, var(--bg) 78%);
+  box-shadow: var(--board-shadow);
+  touch-action: none;
+}
+
+.board3d-canvas {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+
+.board3d-canvas:active {
+  cursor: grabbing;
+}
+
+.board3d-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.board3d-reset,
+.board3d-toggle,
+.board3d-hint {
+  position: absolute;
+  z-index: 2;
+  font-size: 11px;
+}
+
+.board3d-reset,
+.board3d-toggle {
+  top: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg-2) 80%, transparent);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.board3d-toggle.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.board3d-toggle {
+  right: 66px;
+}
+
+.board3d-hint {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+/* On wide screens the canvas grows sideways around the same centre, and the
+   extra width slides underneath the sidebar on the right. The board scene
+   stays centred; the sidebar and eval bar carry z-index 1 (see App.css) so
+   they always paint above the canvas and stay clickable. */
+@media (min-width: 1101px) {
+  .board-wrap .board3d {
+    position: absolute;
+    top: 0;
+    left: -181px;
+    width: calc(100% + 362px);
+    height: 100%;
+    aspect-ratio: auto;
+    z-index: 0;
+  }
+
+  .board-wrap .board3d-reset {
+    right: 189px;
+  }
+
+  .board-wrap .board3d-toggle {
+    right: 247px;
+  }
+}

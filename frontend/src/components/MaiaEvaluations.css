@@ -1,0 +1,388 @@
+.maia-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.maia-analysis-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.maia-band-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.maia-band-chips {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-2);
+  border-radius: 4px;
+}
+
+.maia-band-chips button {
+  border: 0;
+  padding: 4px 7px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.maia-band-chips button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.maia-move-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.maia-move-count button {
+  width: 20px;
+  border: 0;
+  padding: 2px 0;
+  background: var(--bg-2);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.maia-move-count button:disabled {
+  opacity: 0.4;
+}
+
+.maia-move-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.maia-move-rows-heading {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.maia-move-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 6px;
+  background: var(--bg-2);
+  border-radius: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.maia-move-row:hover {
+  background: var(--button-hover);
+}
+
+.maia-move-score,
+.maia-move-sf {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.maia-move-score {
+  color: var(--text-dim);
+}
+
+.maia-move-sf {
+  color: var(--accent-hover);
+}
+
+.maia-move-opening {
+  flex-basis: 100%;
+  overflow: hidden;
+  color: var(--text-dim);
+  font-size: 9px;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maia-move-openings {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}
+
+.maia-locked-openings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 8px;
+  padding: 3px 6px;
+  background: var(--bg-2);
+  border-radius: 4px;
+  color: var(--text-dim);
+  font-size: 9px;
+}
+
+.maia-locked-openings .maia-move-opening {
+  flex: 0 1 auto;
+  font-size: 9px;
+}
+
+.maia-locked-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.maia-move-opening-eco {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-hover);
+  margin-right: 4px;
+}
+
+.maia-move-rank {
+  flex: 0 0 12px;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.maia-move-row .maia-move {
+  flex: 0 0 46px;
+}
+
+.maia-move-bar {
+  flex: 1 1 auto;
+  height: 5px;
+  min-width: 30px;
+  background: var(--bg-3, var(--bg-2));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.maia-move-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.maia-move-percent {
+  flex: 0 0 32px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.maia-analysis-label {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.maia-view-toggle {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-2);
+  border-radius: 4px;
+}
+
+.maia-view-toggle button {
+  border: 0;
+  padding: 4px 7px;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.maia-view-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.maia-evaluation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.maia-evaluation-card {
+  display: flex;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px 8px;
+  background: var(--bg-2);
+  border-radius: 4px;
+}
+
+.maia-evaluation-card:hover {
+  background: var(--button-hover);
+}
+
+.sf-card {
+  border: 1px solid var(--line);
+}
+
+.sf-primary-value {
+  flex: 0 0 53px;
+  display: flex;
+  align-items: center;
+  padding-top: 1px;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-primary-value.pos {
+  color: var(--text);
+}
+
+.sf-primary-value.neg {
+  color: var(--text-dim);
+}
+
+.sf-primary-value.empty {
+  color: var(--text-dim);
+}
+
+.sf-best-placeholder {
+  color: var(--text-dim);
+}
+
+.maia-primary-value {
+  flex: 0 0 53px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: 1px;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.maia-primary-chance {
+  font-size: 16px;
+}
+
+.maia-primary-score {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.maia-primary-value.pos .maia-primary-chance {
+  color: var(--text);
+}
+
+.maia-primary-value.neg .maia-primary-chance {
+  color: var(--text-dim);
+}
+
+.maia-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.maia-card-heading {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.maia-best-move {
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.maia-best-move span {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.maia-candidates {
+  overflow: hidden;
+  color: var(--accent-hover);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maia-move {
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.maia-move:hover,
+.maia-move:focus-visible {
+  background: color-mix(in srgb, var(--arrow-alt) 30%, transparent);
+  outline: none;
+}
+
+.maia-candidate-sep {
+  color: var(--text-dim);
+}
+
+.maia-refreshing {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.maia-panel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 3px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.maia-worst-move {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  min-width: 0;
+}
+
+.maia-worst-move .maia-move {
+  color: var(--text);
+  font-size: 11px;
+}
+
+.maia-piece-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+}
+
+.maia-piece-rows .maia-move-rows-heading {
+  color: var(--accent-hover);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}

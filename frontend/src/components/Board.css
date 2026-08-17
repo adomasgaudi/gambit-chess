@@ -6,7 +6,7 @@
   touch-action: none;
   border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 2px 18px rgb(0 0 0 / 45%);
+  box-shadow: var(--board-shadow);
   cursor: pointer;
 }
 
@@ -38,6 +38,8 @@
   width: 12.5%;
   height: 12.5%;
   will-change: transform;
+  /* Only .board-cell is a pointer target; markers must never shadow it. */
+  pointer-events: none;
 }
 
 .piece {
@@ -46,7 +48,47 @@
   pointer-events: none;
 }
 
-.piece img {
+.piece-coin {
+  position: absolute;
+  inset: 6%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.piece.side-w .piece-coin {
+  border: 0.1vmin solid rgb(29 37 45 / 62%);
+  background: radial-gradient(circle at 35% 28%, #fff 0%, #f4f6f8 58%, #b9c5cf 100%);
+  box-shadow: inset 0 0 0 0.04vmin rgb(255 255 255 / 70%), 0 2px 4px rgb(0 0 0 / 38%);
+}
+
+.piece.side-b .piece-coin {
+  border: 0.1vmin solid rgb(255 255 255 / 68%);
+  background: radial-gradient(circle at 35% 28%, #5f6d78 0%, #27323b 58%, #10161d 100%);
+  box-shadow: inset 0 0 0 0.04vmin rgb(255 255 255 / 28%), 0 2px 4px rgb(0 0 0 / 48%);
+}
+
+.piece-coin img {
+  position: relative;
+  z-index: 1;
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+  display: block;
+}
+
+.piece.side-w .piece-coin img {
+  filter: brightness(0) drop-shadow(0 1px 1px rgb(255 255 255 / 35%));
+}
+
+.piece.side-b .piece-coin img {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 1px rgb(0 0 0 / 35%));
+}
+
+
+.piece > img {
   width: 100%;
   height: 100%;
   display: block;
@@ -111,46 +153,11 @@
   border: 0.6vmin solid var(--dest-dot);
 }
 
-/* Defender counts. Bottom-left of each square, clear of the coordinate
-   labels on the right and of the piece's own silhouette. */
-.defbadge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 12.5%;
-  height: 12.5%;
-  z-index: 12;
-  pointer-events: none;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 0 0 4% 4%;
-}
-
-.defbadge span {
-  min-width: 40%;
-  height: 40%;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(8px, 1.5vmin, 15px);
-  font-weight: 700;
-  color: #fff;
-  border: 1px solid rgb(0 0 0 / 35%);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 45%);
-}
-
-.defbadge.safe span {
-  background: #4b7a2b;
-}
-
-.defbadge.contested span {
-  background: #b4832a;
-}
-
-.defbadge.weak span {
-  background: #b23c30;
+.king-protection {
+  fill: none;
+  stroke: var(--arrow-defence);
+  stroke-width: 0.05;
+  opacity: 0.9;
 }
 
 .board-arrows {
@@ -158,6 +165,29 @@
   inset: 0;
   z-index: 15;
   pointer-events: none;
+}
+
+.defence-arrows {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.defence-arrow {
+  fill: none;
+  stroke-width: 0.03;
+  opacity: 0.86;
+}
+
+.defence-arrow.white,
+.defence-dot.white {
+  filter: drop-shadow(0 0 1px rgb(29 37 45 / 88%));
+}
+
+.defence-dot {
+  stroke-width: 0.04;
+  opacity: 0.92;
 }
 
 .coords {

@@ -1,30 +1,136 @@
 :root {
   /* Board */
-  --square-light: #f0d9b5;
-  --square-dark: #b58863;
-  --lastmove: rgb(155 199 0 / 41%);
-  --selected: rgb(20 85 30 / 50%);
-  --hint: rgb(90 160 220 / 35%);
-  --dest-dot: rgb(20 85 30 / 35%);
-  --arrow: #15781b;
+  --square-light: #f1f4f7;
+  --square-dark: #88a2b7;
+  --lastmove: rgb(207 170 44 / 40%);
+  --selected: rgb(38 111 157 / 35%);
+  --hint: rgb(85 153 205 / 30%);
+  --dest-dot: rgb(32 108 150 / 35%);
+  --arrow: #1f8065;
+  --arrow-alt: #be8121;
+  --arrow-defence: #d85858;
+  --arrow-white: #ffffff;
+  --arrow-black: #1d252d;
+
+  /* 3D board (read by Board3D for tiles, frame and wood pieces) */
+  --board3d-tile-light: #c3ab7f;
+  --board3d-tile-dark: #6f5535;
+  --board3d-frame: #3f2a18;
+  --board3d-piece-w: #f0e2c4;
+  --board3d-piece-b: #6d3a1e;
 
   /* Shell */
-  --bg: #161512;
-  --bg-2: #1f1e1b;
-  --panel: #262421;
-  --panel-2: #2f2d2a;
-  --line: #3d3a34;
-  --text: #d8d6d2;
-  --text-dim: #97948e;
-  --accent: #629924;
-  --accent-hover: #74ac2f;
-  --danger: #cc4a3c;
-  --white-eval: #f4f4f4;
-  --black-eval: #403d39;
+  --bg: #f4f6f8;
+  --bg-2: #e9edf2;
+  --panel: #ffffff;
+  --panel-2: #f6f8fa;
+  --line: #d4dde6;
+  --line-strong: #bcc9d5;
+  --text: #17212b;
+  --text-dim: #697785;
+  --accent: #2f729c;
+  --accent-hover: #3e86b2;
+  --danger: #c64b43;
+  --white-eval: #ffffff;
+  --black-eval: #40505f;
+  --button-hover: #eaf0f4;
+  --code-bg: #e8edf2;
+  --app-background: radial-gradient(ellipse at 50% -10%, rgb(67 126 163 / 10%), transparent 62%), var(--bg);
+  --topbar-bg: rgb(255 255 255 / 88%);
+  --sidebar-shadow: 0 10px 32px rgb(27 51 70 / 8%);
+  --board-shadow: 0 8px 24px rgb(27 51 70 / 18%);
 
-  color-scheme: dark;
+  color-scheme: light;
   font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+.theme-black {
+  --square-light: #e1e8ee;
+  --square-dark: #5d7184;
+  --lastmove: rgb(212 180 54 / 40%);
+  --selected: rgb(86 176 166 / 42%);
+  --hint: rgb(98 165 211 / 30%);
+  --dest-dot: rgb(92 190 174 / 38%);
+  --arrow: #5bc0a4;
+  --arrow-alt: #e5ae4e;
+  --arrow-defence: #dd7777;
+  --arrow-white: #f4f6f8;
+  --arrow-black: #10161d;
+  --bg: #0f141a;
+  --bg-2: #171e26;
+  --panel: #202832;
+  --panel-2: #2a343f;
+  --line: #3a4754;
+  --line-strong: #536270;
+  --text: #edf2f6;
+  --text-dim: #9aa8b5;
+  --accent: #4eae9d;
+  --accent-hover: #68c3b1;
+  --danger: #d45b53;
+  --white-eval: #f4f5f5;
+  --black-eval: #34414e;
+  --button-hover: #35424e;
+  --code-bg: #10161d;
+  --app-background: radial-gradient(ellipse at 50% -10%, rgb(78 174 157 / 11%), transparent 60%), var(--bg);
+  --topbar-bg: rgb(23 30 38 / 92%);
+  --sidebar-shadow: 0 10px 32px rgb(0 0 0 / 24%);
+  --board-shadow: 0 8px 24px rgb(0 0 0 / 38%);
+  color-scheme: dark;
+}
+
+/* Board palettes: override the board colours on top of either app theme.
+   'wood' is the default already in :root, so it needs no rule of its own. */
+
+.board-emerald {
+  --square-light: #ebecd0;
+  --square-dark: #739552;
+  --lastmove: rgb(205 210 106 / 55%);
+  --selected: rgb(20 176 95 / 42%);
+  --hint: rgb(90 160 255 / 35%);
+  --dest-dot: rgb(20 90 50 / 45%);
+  --arrow: #15781b;
+  --arrow-alt: #b58822;
+  --arrow-defence: #d85858;
+  --board3d-tile-light: #b8bd85;
+  --board3d-tile-dark: #6b8e4e;
+  --board3d-frame: #3c4423;
+  --board3d-piece-w: #f5f0dd;
+  --board3d-piece-b: #33261a;
+}
+
+.board-ocean {
+  --square-light: #dee3e6;
+  --square-dark: #788c93;
+  --lastmove: rgb(215 175 60 / 45%);
+  --selected: rgb(40 110 180 / 40%);
+  --hint: rgb(85 153 205 / 35%);
+  --dest-dot: rgb(40 110 180 / 40%);
+  --arrow: #15781b;
+  --arrow-alt: #be8121;
+  --arrow-defence: #d85858;
+  --board3d-tile-light: #b9c3c9;
+  --board3d-tile-dark: #6f858d;
+  --board3d-frame: #2e3540;
+  --board3d-piece-w: #f2ead8;
+  --board3d-piece-b: #3a2f24;
+}
+
+.board-midnight {
+  --square-light: #56575e;
+  --square-dark: #313238;
+  --lastmove: rgb(186 202 68 / 55%);
+  --selected: rgb(35 150 90 / 50%);
+  --hint: rgb(90 160 255 / 35%);
+  --dest-dot: rgb(0 0 0 / 40%);
+  --arrow: #62c180;
+  --arrow-alt: #e5ae4e;
+  --arrow-defence: #e06c6c;
+  --board3d-tile-light: #5a5b62;
+  --board3d-tile-dark: #33343a;
+  --board3d-frame: #14161b;
+  --board3d-piece-w: #e8e6e0;
+  --board3d-piece-b: #101218;
 }
 
 * {
@@ -55,8 +161,8 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: #3a3733;
-  border-color: #4a463f;
+  background: var(--button-hover);
+  border-color: var(--line-strong);
 }
 
 button:disabled {
@@ -101,7 +207,7 @@ input[type='range'] {
 }
 
 code {
-  background: #12110f;
+  background: var(--code-bg);
   padding: 1px 5px;
   border-radius: 3px;
   font-size: 0.92em;
@@ -112,10 +218,48 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #423f3a;
+  background: var(--line-strong);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.theme-picker {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+}
+
+.theme-picker-label {
+  padding: 0 5px;
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+}
+
+.theme-picker button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 4px 7px;
+}
+
+.theme-picker button:hover:not(:disabled) {
+  background: var(--button-hover);
+  border-color: transparent;
+}
+
+.theme-picker button.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
 }

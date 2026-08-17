@@ -1,15 +1,16 @@
 /**
- * The landing page: pick what kind of game this is going to be.
+ * The landing page: start a Maia game.
  *
  * Choosing a card doesn't start anything — it opens the options panel next to
- * the board with that mode already selected, so strength and time control are
- * still one screen away rather than buried behind a default.
+ * Maia is the only playable opponent; engine analysis lives inside that game.
  */
 
-import type { Opponent } from './Setup'
+import type { Theme } from '../prefs'
+import { Changelog } from './Changelog'
+import { ThemePicker } from './ThemePicker'
 import './Landing.css'
 
-export type LandingChoice = Opponent | 'analysis'
+export type LandingChoice = 'maia'
 
 interface Card {
   choice: LandingChoice
@@ -32,82 +33,35 @@ const pieceArt = (...pieces: string[]) => (
   </div>
 )
 
-const analysisArt = (
-  <div className="card-art board-art">
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <g fill="var(--square-dark)">
-        <rect x="0" y="0" width="12" height="12" />
-        <rect x="24" y="0" width="12" height="12" />
-        <rect x="12" y="12" width="12" height="12" />
-        <rect x="36" y="12" width="12" height="12" />
-        <rect x="0" y="24" width="12" height="12" />
-        <rect x="24" y="24" width="12" height="12" />
-        <rect x="12" y="36" width="12" height="12" />
-        <rect x="36" y="36" width="12" height="12" />
-      </g>
-      <path
-        d="M13 35 L33 15"
-        stroke="var(--arrow)"
-        strokeWidth="5"
-        strokeLinecap="round"
-        markerEnd="url(#landing-arrow)"
-      />
-      <defs>
-        <marker id="landing-arrow" orient="auto" markerWidth="3" markerHeight="3.6" refX="1.2" refY="1.8">
-          <path d="M0,0 V3.6 L2.6,1.8 Z" fill="var(--arrow)" />
-        </marker>
-      </defs>
-    </svg>
-  </div>
-)
-
 const CARDS: Card[] = [
-  {
-    choice: 'stockfish',
-    title: 'Stockfish',
-    tagline: '1320 – full strength',
-    blurb:
-      'The strongest engine there is, compiled to WebAssembly and running in this tab. Cap its rating and it plays worse — not more human.',
-    art: pieceArt('wQ'),
-  },
   {
     choice: 'maia',
     title: 'Maia',
-    tagline: '1100 – 1900 rated',
-    blurb:
-      'Nine neural networks, one per rating band, trained to predict the move a human of that rating actually played. It blunders like one too.',
+    tagline: 'Choose your Elo and time',
+    blurb: 'Play a human-like opponent with a rating and clock that fit the game you want to play.',
     art: pieceArt('bN'),
-  },
-  {
-    choice: 'human',
-    title: 'Two players',
-    tagline: 'One board, one screen',
-    blurb: 'Pass and play against someone next to you, with real clocks and a full move list.',
-    art: pieceArt('wP', 'bP'),
-  },
-  {
-    choice: 'analysis',
-    title: 'Analysis board',
-    tagline: 'Any position',
-    blurb:
-      'Play both sides, load a FEN, walk the variations, and let Stockfish score every line as you go.',
-    art: analysisArt,
   },
 ]
 
 export function Landing({
   maiaOnline,
   hasGameInProgress,
+  theme,
   onChoose,
   onResume,
+  onInsights,
+  onThemeChange,
 }: {
   maiaOnline: boolean | null
   hasGameInProgress: boolean
+  theme: Theme
   onChoose: (choice: LandingChoice) => void
   onResume: () => void
+  onInsights: () => void
+  onThemeChange: (theme: Theme) => void
 }) {
   return (
-    <div className="landing">
+    <div className={`landing theme-${theme}`}>
       <div className="landing-inner">
         <header className="landing-head">
           <h1>
@@ -121,6 +75,7 @@ export function Landing({
               ← Back to your game
             </button>
           )}
+          <ThemePicker theme={theme} onChange={onThemeChange} />
         </header>
 
         <div className="landing-cards">
@@ -144,10 +99,13 @@ export function Landing({
         </div>
 
         <footer className="landing-foot">
-          <div>Stockfish 18 runs in the browser. Maia runs on lc0 through the local server.</div>
-          <div className="landing-version">Gambit v{__APP_VERSION__}</div>
+          <button className="landing-link" onClick={onInsights}>
+            Insights — your Lichess games, counted →
+          </button>
+          <div className="landing-version">Gambit {__APP_VERSION__}</div>
         </footer>
       </div>
+      <Changelog />
     </div>
   )
 }

@@ -1,0 +1,94 @@
+.changelog-anchor {
+  position: fixed;
+  right: 16px;
+  bottom: 14px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.changelog-anchor > * {
+  pointer-events: auto;
+}
+
+.changelog-toggle {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--panel);
+  box-shadow: 0 3px 14px rgb(0 0 0 / 28%);
+}
+
+.changelog-toggle:hover {
+  color: var(--text);
+}
+
+.changelog-panel {
+  width: min(330px, calc(100vw - 32px));
+  max-height: min(70vh, 460px);
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 40%);
+}
+
+.changelog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-dim);
+}
+
+.changelog-close {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.changelog-entry {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.changelog-entry summary,
+.changelog-detail summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.changelog-entry summary span {
+  margin-right: 6px;
+  color: var(--accent-hover);
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog-entry p,
+.changelog-detail p {
+  margin: 6px 0 0 18px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.changelog-detail {
+  margin: 7px 0 0 18px;
+}
+
+.changelog-detail p {
+  margin-left: 0;
+}

@@ -18,15 +18,18 @@
  * distribute: mostly quick, with an occasional long think.
  */
 
-export type Pace = 'instant' | 'human' | 'slow'
+export type Pace = 'fast' | 'human' | 'slow'
 
 export const PACE_LABELS: Record<Pace, string> = {
-  instant: 'Instant',
+  fast: 'Fast',
   human: 'Human',
   slow: 'Slow',
 }
 
-const PACE_FACTOR: Record<Pace, number> = { instant: 0, human: 1, slow: 2.2 }
+// Fast is a sub-second delay: at a three-minute budget the base spend is about
+// 0.6s, and time pressure can cut it to the 220ms floor. Human and slow are
+// scaled against the clock, as before.
+const PACE_FACTOR: Record<Pace, number> = { fast: 0.15, human: 1, slow: 2.2 }
 
 /**
  * Clock an untimed game pretends to have, so one model covers both cases. It
@@ -54,7 +57,6 @@ function gaussian(): number {
 
 export function thinkingDelayMs({ pace, remainingMs, ply, legalMoves }: ThinkContext): number {
   const factor = PACE_FACTOR[pace]
-  if (factor === 0) return 0
 
   const clock = remainingMs ?? UNTIMED_BUDGET_MS
 
